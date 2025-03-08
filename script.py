@@ -63,6 +63,8 @@ async def price_command(update: Update, context: CallbackContext):
     if price:
         await update.message.reply_text(f"Текущая цена: {price} EUR")
     else:
+        print(f"TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
+        print(f"TELEGRAM_CHAT_ID: {TELEGRAM_CHAT_ID}")
         await update.message.reply_text("Не удалось получить цену.")
 
 # Команда /start
@@ -78,8 +80,6 @@ def main():
     app.add_handler(CommandHandler("price", price_command))
 
     print("Бот запущен!")
-    print(f"TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
-    print(f"TELEGRAM_CHAT_ID: {TELEGRAM_CHAT_ID}")
     app.run_polling()
 
 if __name__ == "__main__":
