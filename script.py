@@ -78,6 +78,8 @@ def main():
     app.add_handler(CommandHandler("price", price_command))
 
     print("Бот запущен!")
+    print(f"TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
+    print(f"TELEGRAM_CHAT_ID: {TELEGRAM_CHAT_ID}")
     app.run_polling()
 
 if __name__ == "__main__":
