@@ -33,6 +33,7 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
+# Убедитесь, что ChromeDriver установлен
 service = Service(ChromeDriverManager().install())
 
 # Функция для получения цены через Selenium
@@ -41,11 +42,6 @@ def get_price():
     try:
         logging.info("Open page...")
         driver.get(URL)
-
-        html = driver.page_source
-        with open("page.html", "w", encoding="utf-8") as f:
-            f.write(html)
-        print("Page is saved as page.html")
 
         # Ждём, пока появится meta-тег с ценой
         WebDriverWait(driver, 10).until(
