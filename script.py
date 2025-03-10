@@ -14,8 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
-# Логирование
-from webdriver_manager.firefox import GeckoDriverManager
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,11 +28,14 @@ URL = "https://www.worten.pt/produtos/aspirador-sem-saco-bosch-bgs7sil1-pro-sile
 PRICE_FILE = "price.json"
 
 # Настройка Firefox
-firefox_options = Options()
-firefox_options.add_argument("--headless")  # Без графического интерфейса
-firefox_options.add_argument("--disable-gpu")
-firefox_options.add_argument("--no-sandbox")
-firefox_options.add_argument("--disable-dev-shm-usage")
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--window-size=1920,1080")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+
 
 # Убедитесь, что ChromeDriver установлен
 service = Service(ChromeDriverManager().install())
