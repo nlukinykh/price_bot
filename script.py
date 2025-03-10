@@ -39,8 +39,13 @@ service = Service(ChromeDriverManager().install())
 def get_price():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
-        logging.info("Открываем страницу товара...")
+        logging.info("Open page...")
         driver.get(URL)
+
+        html = driver.page_source
+        with open("page.html", "w", encoding="utf-8") as f:
+            f.write(html)
+        print("Page is saved as page.html")
 
         # Ждём, пока появится meta-тег с ценой
         WebDriverWait(driver, 10).until(
@@ -51,21 +56,18 @@ def get_price():
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
 
-        logging.info("Страница загружена, ищем цену...")
-        logging.debug(soup.prettify()[:2000])  # Вывод части HTML для отладки
-
-        price_meta = soup.find("meta", itemprop="price")
+        price_meta = soup.find("meta", {"itemprop": "price"})
 
         if price_meta:
             price = price_meta["content"]
-            logging.info(f"Цена найдена: {price} EUR")
+            logging.info(f"Price is found: {price} EUR")
             return price
         else:
-            logging.warning("Цена не найдена!")
+            logging.warning("Price is not found!")
             return None
 
     except Exception as e:
-        logging.error(f"Ошибка при получении цены: {e}")
+        logging.error(f"Got an error by getting a price: {e}")
         return None
 
     finally:
@@ -79,7 +81,7 @@ async def send_telegram_message(context: CallbackContext, message: str):
 async def check_price(context: CallbackContext):
     current_price = get_price()
     if current_price is None:
-        logging.warning("Не удалось получить цену.")
+        logging.warning("Failed to get the price.")
         return
 
     # Проверяем, есть ли сохранённая цена
@@ -92,7 +94,7 @@ async def check_price(context: CallbackContext):
 
     # Если цена изменилась — уведомляем
     if saved_price is not None and current_price != saved_price:
-        await send_telegram_message(context, f"Цена изменилась: {saved_price}€ → {current_price}€")
+        await send_telegram_message(context, f"Price is changed: {saved_price}€ → {current_price}€")
 
     # Обновляем сохранённую цену
     with open(PRICE_FILE, "w") as file:
@@ -102,14 +104,14 @@ async def check_price(context: CallbackContext):
 async def price_command(update: Update, context: CallbackContext):
     price = get_price()
     if price:
-        await update.message.reply_text(f"Текущая цена: {price} EUR")
+        await update.message.reply_text(f"Current price: {price} EUR")
     else:
-        logging.warning("Ошибка при получении цены!")
-        await update.message.reply_text("Не удалось получить цену :(")
+        logging.warning("Error when receiving the price!")
+        await update.message.reply_text("Failed to get the price :(")
 
 # Команда /start
 async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text("Привет! Я бот.")
+    await update.message.reply_text("Hello, I'm bot")
 
 # Запуск бота
 def main():
@@ -119,7 +121,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("price", price_command))
 
-    logging.info("Бот запущен!")
+    logging.info("Bot is running!")
     app.run_polling()
 
 if __name__ == "__main__":
