@@ -20,7 +20,6 @@ PRICE_FILE = "price.json"
 def get_price():
     session = requests.Session()
 
-
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
@@ -29,7 +28,7 @@ def get_price():
     soup = BeautifulSoup(response.text, "html.parser")
 
     price_meta = soup.find("meta", itemprop="price")
-    logging.debug(price_meta)
+    print("!!!!!!!!!!!!" + price_meta)
     # logging.debug(soup.prettify())
     if price_meta:
         price = price_meta["content"]
@@ -92,5 +91,4 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     main()
