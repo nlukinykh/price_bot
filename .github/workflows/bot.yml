@@ -29,8 +29,6 @@ jobs:
         run: |
           choco install firefox -y
           choco install geckodriver -y
-          firefox --version
-          geckodriver --version
       
 
       - name: Запуск бота
