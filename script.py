@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -22,9 +23,10 @@ def get_price():
     soup = BeautifulSoup(response.text, "html.parser")
 
     price_meta = soup.find("meta", itemprop="price")
+    print(price_meta)
     if price_meta:
         price = price_meta["content"]
-        print(f"Цена: {price} EUR")
+        print(f"Цена: {price} EUR!")
         return price
     else:
         print("Цена не найдена!")
@@ -65,7 +67,7 @@ async def price_command(update: Update, context: CallbackContext):
     else:
         print(f"TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
         print(f"TELEGRAM_CHAT_ID: {TELEGRAM_CHAT_ID}")
-        await update.message.reply_text("Не удалось получить цену.")
+        await update.message.reply_text("Не удалось получить цену :(")
 
 # Команда /start
 async def start(update: Update, context: CallbackContext):
