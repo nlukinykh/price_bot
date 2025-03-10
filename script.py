@@ -4,6 +4,7 @@ import os
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,13 +31,15 @@ chrome_options.add_argument("--headless")  # Без интерфейса
 chrome_options.add_argument("--disable-blink-features=AutomationControlled")  # Маскируем Selenium
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
-service = Service("/usr/bin/chromedriver")  # Возможно, путь нужно поменять
-driver = webdriver.Chrome(service=service, options=chrome_options)
+service = Service(ChromeDriverManager().install())
 
 # Функция для получения цены через Selenium
 def get_price():
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
+        logging.info("Открываем страницу товара...")
         driver.get(URL)
 
         # Ждём, пока появится meta-тег с ценой
@@ -49,6 +52,8 @@ def get_price():
         soup = BeautifulSoup(html, "html.parser")
 
         logging.info("Страница загружена, ищем цену...")
+        logging.debug(soup.prettify()[:2000])  # Вывод части HTML для отладки
+
         price_meta = soup.find("meta", itemprop="price")
 
         if price_meta:
@@ -62,6 +67,9 @@ def get_price():
     except Exception as e:
         logging.error(f"Ошибка при получении цены: {e}")
         return None
+
+    finally:
+        driver.quit()  # Закрываем браузер
 
 # Функция для отправки сообщения в Telegram
 async def send_telegram_message(context: CallbackContext, message: str):
