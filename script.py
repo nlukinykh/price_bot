@@ -95,7 +95,7 @@ def get_price():
         logging.info("Page loaded, waiting for the price element...")
 
         time.sleep(5)
-        html = driver.pagпшe_source
+        html = driver.page_source
         # Разбиваем HTML на части по 1000 символов и выводим их в лог
         chunk_size = 1000
         for i in range(0, len(html), chunk_size):
