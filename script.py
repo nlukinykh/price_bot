@@ -1,13 +1,11 @@
+from selenium.webdriver import Proxy
+from selenium.webdriver.common.proxy import ProxyType
 import logging
-import json
 import os
-
-import requests
+import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver import Proxy
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.proxy import ProxyType
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -15,7 +13,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
+import cloudscraper
 
+scraper = cloudscraper.create_scraper()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,22 +40,6 @@ chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64
 
 # Убедитесь, что ChromeDriver установлен
 service = Service(ChromeDriverManager().install())
-
-
-import logging
-import json
-import os
-import time
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -87,12 +71,16 @@ chrome_options.proxy = proxy  # Добавляем прокси
 
 service = Service(ChromeDriverManager().install())
 
+
 def get_price():
     driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
         logging.info("Open page...")
-        driver.get(URL)
-        logging.info("Page loaded, waiting for the price element...")
+        # driver.get(URL)
+        # logging.info("Page loaded, waiting for the price element...")
+
+        response = scraper.get(URL)
+        print(response.text)
 
         time.sleep(5)
         html = driver.page_source
@@ -101,29 +89,22 @@ def get_price():
         for i in range(0, len(html), chunk_size):
             logging.info(f"Page HTML (chunk {i//chunk_size + 1}): {html[i:i+chunk_size]}")
 
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="price"]'))
-        )
+        if response.status_code == 200:
+            # Парсим HTML-код с помощью BeautifulSoup
+            soup = BeautifulSoup(response.text, "html.parser")
 
-        html = driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
+            # Ищем элемент с ценой
+            price_meta = soup.find("meta", {"itemprop": "price"})
 
-        price_meta = soup.find("meta", {"itemprop": "price"})
-
-        if price_meta:
-            price = price_meta["content"]
-            logging.info(f"Price is found: {price} EUR")
-            return price
+            if price_meta:
+                price = price_meta["content"]
+                logging.info(f"Price found: {price} EUR")
+            else:
+                logging.info("Price not found!")
         else:
-            logging.warning("Price is not found!")
-            return None
-
-    except Exception as e:
-        logging.error(f"Got an error by getting a price: {e}")
-        return None
-
+            logging.info(f"Failed to load the page. Status code: {response.status_code}")
     finally:
-        driver.quit()
+        logging.info("oops")
 
 # Команда /price
 async def price_command(update: Update, context: CallbackContext):
