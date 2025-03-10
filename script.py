@@ -38,19 +38,9 @@ firefox_options.add_argument("--disable-dev-shm-usage")
 # Убедитесь, что ChromeDriver установлен
 service = Service(GeckoDriverManager().install())
 
+
 # Функция для получения цены через Selenium
 def get_price():
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
-    }
-    response = requests.get(URL, headers=headers)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-        price_meta = soup.find("meta", {"itemprop": "price"})
-        if price_meta:
-            print(price_meta["content"])
-            return price_meta["content"]
-
     driver = webdriver.Firefox(service=service, options=firefox_options)
     try:
         logging.info("Open page...")
@@ -58,9 +48,16 @@ def get_price():
         logging.info("Page loaded, waiting for the price element...")
 
         # Ждём, пока появится meta-тег с ценой
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="price"]'))
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR,
+                                            'html body.w-session-channel-WEB.w-session-mode-site div#__nuxt div div div div div section.product-heading div.wrapper div.product-heading__main-container div.product-heading__buy-boxes div.buy-box div div.badges-container--grid.badges-container div.product-price-info span.price--lg.price--mixed.price--B.price span.price__container span.price__numbers--bold.price__numbers.notranslate.raised-decimal span.value'))
         )
+        price_element2 = driver.find_element(By.CSS_SELECTOR, 'html body.w-session-channel-WEB.w-session-mode-site div#__nuxt div div div div div section.product-heading div.wrapper div.product-heading__main-container div.product-heading__buy-boxes div.buy-box div div.badges-container--grid.badges-container div.product-price-info span.price--lg.price--mixed.price--B.price span.price__container span.price__numbers--bold.price__numbers.notranslate.raised-decimal span.value')
+        logging.info(f"Price element HTML2: {price_element2.get_attribute('outerHTML')}")
+        price_element = driver.find_element(By.CSS_SELECTOR, 'meta[itemprop="price"]')
+        logging.info(f"Price element HTML1: {price_element.get_attribute('outerHTML')}")
+        price = price_element.get_attribute("content")
+        logging.info(f"Price found: {price} EUR")
 
         # Получаем HTML страницы
         html = driver.page_source
@@ -83,9 +80,11 @@ def get_price():
     finally:
         driver.quit()  # Закрываем браузер
 
+
 # Функция для отправки сообщения в Telegram
 async def send_telegram_message(context: CallbackContext, message: str):
     await context.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+
 
 # Функция для проверки цены
 async def check_price(context: CallbackContext):
@@ -110,6 +109,7 @@ async def check_price(context: CallbackContext):
     with open(PRICE_FILE, "w") as file:
         json.dump({"price": current_price}, file)
 
+
 # Команда /price
 async def price_command(update: Update, context: CallbackContext):
     price = get_price()
@@ -119,9 +119,11 @@ async def price_command(update: Update, context: CallbackContext):
         logging.warning("Error when receiving the price!")
         await update.message.reply_text("Failed to get the price :(")
 
+
 # Команда /start
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Hello, I'm bot")
+
 
 # Запуск бота
 def main():
@@ -133,6 +135,7 @@ def main():
 
     logging.info("Bot is running!")
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
