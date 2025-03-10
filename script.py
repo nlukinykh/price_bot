@@ -26,9 +26,11 @@ def get_price():
     session.headers.update(headers)
     response = session.get(URL)
     soup = BeautifulSoup(response.text, "html.parser")
+    print("SOUP")
+    print(soup.prettify())  # Покажет весь HTML
 
     price_meta = soup.find("meta", itemprop="price")
-    print("!!!!!!!!!!!!" + price_meta)
+
     # logging.debug(soup.prettify())
     if price_meta:
         price = price_meta["content"]
