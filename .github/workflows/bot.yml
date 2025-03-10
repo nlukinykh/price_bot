@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main  # Запуск при обновлении кода в main
-  schedule:
-    - cron: '0 * * * *'  # Запуск каждый час
+  #schedule:
+  #  - cron: '* * * * *'  # Запуск каждый час
   workflow_dispatch:  # Возможность запустить вручную
 
 jobs:
