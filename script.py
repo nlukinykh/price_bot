@@ -1,11 +1,12 @@
 import logging
 import json
 import os
+
+import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -13,6 +14,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
 # Логирование
+from webdriver_manager.firefox import GeckoDriverManager
+
 logging.basicConfig(level=logging.INFO)
 
 # Телеграм-бот токен и ID чата
@@ -25,23 +28,34 @@ URL = "https://www.worten.pt/produtos/aspirador-sem-saco-bosch-bgs7sil1-pro-sile
 # Файл для хранения цены
 PRICE_FILE = "price.json"
 
-# Настройка Selenium
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Без интерфейса
-chrome_options.add_argument("--disable-blink-features=AutomationControlled")  # Маскируем Selenium
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+# Настройка Firefox
+firefox_options = Options()
+firefox_options.add_argument("--headless")  # Без графического интерфейса
+firefox_options.add_argument("--disable-gpu")
+firefox_options.add_argument("--no-sandbox")
+firefox_options.add_argument("--disable-dev-shm-usage")
 
 # Убедитесь, что ChromeDriver установлен
-service = Service(ChromeDriverManager().install())
+service = Service(GeckoDriverManager().install())
 
 # Функция для получения цены через Selenium
 def get_price():
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    }
+    response = requests.get(URL, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        price_meta = soup.find("meta", {"itemprop": "price"})
+        if price_meta:
+            print(price_meta["content"])
+            return price_meta["content"]
+
+    driver = webdriver.Firefox(service=service, options=firefox_options)
     try:
         logging.info("Open page...")
         driver.get(URL)
+        logging.info("Page loaded, waiting for the price element...")
 
         # Ждём, пока появится meta-тег с ценой
         WebDriverWait(driver, 10).until(
