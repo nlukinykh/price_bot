@@ -26,11 +26,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Установка Firefox и GeckoDriver
-          run: |
-            choco install firefox -y
-            choco install geckodriver -y
-            firefox --version
-            geckodriver --version
+        run: |
+          choco install firefox -y
+          choco install geckodriver -y
+          firefox --version
+          geckodriver --version
       
 
       - name: Запуск бота
