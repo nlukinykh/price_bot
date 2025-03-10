@@ -5,8 +5,9 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -36,12 +37,12 @@ firefox_options.add_argument("--no-sandbox")
 firefox_options.add_argument("--disable-dev-shm-usage")
 
 # Убедитесь, что ChromeDriver установлен
-service = Service(GeckoDriverManager().install())
+service = Service(ChromeDriverManager().install())
 
 
 # Функция для получения цены через Selenium
 def get_price():
-    driver = webdriver.Firefox(service=service, options=firefox_options)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
         logging.info("Open page...")
         driver.get(URL)

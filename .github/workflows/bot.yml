@@ -4,8 +4,8 @@ on:
   push:
   #  branches:
   #    - main  # Запуск при обновлении кода в main
-  # schedule:
-  #  - cron: '0 * * * *'  # Запуск каждый час
+  #schedule:
+  #  - cron: '* * * * *'  # Запуск каждый час
   workflow_dispatch:  # Возможность запустить вручную
 
 jobs:
@@ -25,11 +25,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Установка Firefox и GeckoDriver
+      - name: Install Chrome and ChromeDriver
         run: |
-          choco install firefox -y
-          choco install geckodriver -y
-      
+          choco install googlechrome chromedriver -y
 
       - name: Запуск бота
         env:
