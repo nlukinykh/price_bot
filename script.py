@@ -5,7 +5,9 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Proxy
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.proxy import ProxyType
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -68,6 +70,12 @@ URL = "https://www.worten.pt/produtos/aspirador-sem-saco-bosch-bgs7sil1-pro-sile
 # Файл для хранения цены
 PRICE_FILE = "price.json"
 
+proxy = Proxy({
+    'proxyType': ProxyType.MANUAL,
+    'httpProxy': '52.18.193.139:3128',  # Замените на ваш прокси
+    'sslProxy': '52.18.193.139:3128'    # Замените на ваш прокси
+})
+
 # Настройка Chrome
 chrome_options = Options()
 chrome_options.add_argument("--disable-gpu")
@@ -75,6 +83,7 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+chrome_options.proxy = proxy  # Добавляем прокси
 
 service = Service(ChromeDriverManager().install())
 
@@ -86,6 +95,11 @@ def get_price():
         logging.info("Page loaded, waiting for the price element...")
 
         time.sleep(5)
+        html = driver.pagпшe_source
+        # Разбиваем HTML на части по 1000 символов и выводим их в лог
+        chunk_size = 1000
+        for i in range(0, len(html), chunk_size):
+            logging.info(f"Page HTML (chunk {i//chunk_size + 1}): {html[i:i+chunk_size]}")
 
         WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="price"]'))
