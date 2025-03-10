@@ -4,13 +4,13 @@ on:
   push:
   #  branches:
   #    - main  # Запуск при обновлении кода в main
-  #schedule:
-  #  - cron: '* * * * *'  # Запуск каждый час
+  # schedule:
+  #  - cron: '0 * * * *'  # Запуск каждый час
   workflow_dispatch:  # Возможность запустить вручную
 
 jobs:
   run-bot:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout репозитория
         uses: actions/checkout@v3
@@ -25,9 +25,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Chrome and ChromeDriver
+      - name: Установка Firefox и GeckoDriver
         run: |
-          choco install googlechrome chromedriver -y
+          sudo apt-get update
+          sudo apt-get install -y firefox
+          wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
+          tar -xvzf geckodriver-v0.34.0-linux64.tar.gz
+          sudo mv geckodriver /usr/local/bin/geckodriver
+          sudo chmod +x /usr/local/bin/geckodriver
+          firefox --version
+          geckodriver --version
 
       - name: Запуск бота
         env:

@@ -127,6 +127,8 @@ async def start(update: Update, context: CallbackContext):
 
 # Запуск бота
 def main():
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Starting the bot...")
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Добавляем обработчики команд
