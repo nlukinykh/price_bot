@@ -1,4 +1,4 @@
-import os
+import logging
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -18,12 +18,19 @@ PRICE_FILE = "price.json"
 
 # Функция для получения текущей цены
 def get_price():
-    headers = {"User-Agent": "Mozilla/5.0"}  # Имитация браузера
-    response = requests.get(URL, headers=headers)
+    session = requests.Session()
+
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    }
+    session.headers.update(headers)
+    response = session.get(URL)
     soup = BeautifulSoup(response.text, "html.parser")
 
     price_meta = soup.find("meta", itemprop="price")
-    print(price_meta)
+    logging.debug(price_meta)
+    # logging.debug(soup.prettify())
     if price_meta:
         price = price_meta["content"]
         print(f"Цена: {price} EUR!")
@@ -85,4 +92,5 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()

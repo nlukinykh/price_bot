@@ -2,8 +2,8 @@ name: Run Telegram Bot
 
 on:
   push:
-    branches:
-      - main  # Запуск при обновлении кода в main
+  #  branches:
+  #    - main  # Запуск при обновлении кода в main
   #schedule:
   #  - cron: '* * * * *'  # Запуск каждый час
   workflow_dispatch:  # Возможность запустить вручную
@@ -31,7 +31,4 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           set -x
-          python script.py
-
-      - name: Test Echo
-        run: echo "GitHub Actions is working!"
+          python -u script.py
