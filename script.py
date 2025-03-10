@@ -1,10 +1,18 @@
 import logging
-import requests
-from bs4 import BeautifulSoup
 import json
 import os
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
+
+# Логирование
+logging.basicConfig(level=logging.INFO)
 
 # Телеграм-бот токен и ID чата
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -16,28 +24,43 @@ URL = "https://www.worten.pt/produtos/aspirador-sem-saco-bosch-bgs7sil1-pro-sile
 # Файл для хранения цены
 PRICE_FILE = "price.json"
 
-# Функция для получения текущей цены
+# Настройка Selenium
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Без интерфейса
+chrome_options.add_argument("--disable-blink-features=AutomationControlled")  # Маскируем Selenium
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
+service = Service("/usr/bin/chromedriver")  # Возможно, путь нужно поменять
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+# Функция для получения цены через Selenium
 def get_price():
-    session = requests.Session()
+    try:
+        driver.get(URL)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
-    }
-    session.headers.update(headers)
-    response = session.get(URL)
-    soup = BeautifulSoup(response.text, "html.parser")
-    print("SOUP")
-    print(soup.prettify())  # Покажет весь HTML
+        # Ждём, пока появится meta-тег с ценой
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="price"]'))
+        )
 
-    price_meta = soup.find("meta", itemprop="price")
+        # Получаем HTML страницы
+        html = driver.page_source
+        soup = BeautifulSoup(html, "html.parser")
 
-    # logging.debug(soup.prettify())
-    if price_meta:
-        price = price_meta["content"]
-        print(f"Цена: {price} EUR!")
-        return price
-    else:
-        print("Цена не найдена!")
+        logging.info("Страница загружена, ищем цену...")
+        price_meta = soup.find("meta", itemprop="price")
+
+        if price_meta:
+            price = price_meta["content"]
+            logging.info(f"Цена найдена: {price} EUR")
+            return price
+        else:
+            logging.warning("Цена не найдена!")
+            return None
+
+    except Exception as e:
+        logging.error(f"Ошибка при получении цены: {e}")
         return None
 
 # Функция для отправки сообщения в Telegram
@@ -48,7 +71,7 @@ async def send_telegram_message(context: CallbackContext, message: str):
 async def check_price(context: CallbackContext):
     current_price = get_price()
     if current_price is None:
-        print("Не удалось получить цену.")
+        logging.warning("Не удалось получить цену.")
         return
 
     # Проверяем, есть ли сохранённая цена
@@ -59,9 +82,9 @@ async def check_price(context: CallbackContext):
     else:
         saved_price = None
 
-    # Если цена не изменилась, отправляем сообщение
-    if saved_price is not None and current_price == saved_price:
-        await send_telegram_message(context, f"Цена не изменилась: {current_price}€")
+    # Если цена изменилась — уведомляем
+    if saved_price is not None and current_price != saved_price:
+        await send_telegram_message(context, f"Цена изменилась: {saved_price}€ → {current_price}€")
 
     # Обновляем сохранённую цену
     with open(PRICE_FILE, "w") as file:
@@ -73,8 +96,7 @@ async def price_command(update: Update, context: CallbackContext):
     if price:
         await update.message.reply_text(f"Текущая цена: {price} EUR")
     else:
-        print(f"TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
-        print(f"TELEGRAM_CHAT_ID: {TELEGRAM_CHAT_ID}")
+        logging.warning("Ошибка при получении цены!")
         await update.message.reply_text("Не удалось получить цену :(")
 
 # Команда /start
@@ -89,7 +111,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("price", price_command))
 
-    print("Бот запущен!")
+    logging.info("Бот запущен!")
     app.run_polling()
 
 if __name__ == "__main__":
