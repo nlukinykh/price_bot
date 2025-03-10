@@ -26,15 +26,12 @@ jobs:
           pip install -r requirements.txt
 
       - name: Установка Firefox и GeckoDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y firefox
-          wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
-          tar -xvzf geckodriver-v0.34.0-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin/geckodriver
-          sudo chmod +x /usr/local/bin/geckodriver
-          firefox --version
-          geckodriver --version
+          run: |
+            choco install firefox -y
+            choco install geckodriver -y
+            firefox --version
+            geckodriver --version
+      
 
       - name: Запуск бота
         env:
